@@ -1,10 +1,12 @@
 const Meyda = require("meyda");
 const p5 = require("p5");
 const dat = require("dat.gui");
+const StartAudioContext = require("startaudiocontext");
 
 //https://meyda.js.org/audio-features
 
 let lastFeatures; //global var to store in this var. in scope when we can them in the context of p5
+let track;
 
 function prepareMicrophone(callback){
     navigator.mediaDevices.getUserMedia({audio: true, video: false}).then((stream) =>{
@@ -17,6 +19,40 @@ function prepareMicrophone(callback){
     });
 }
 
+function readAudioFromFile(callback){
+    const audioContext = new AudioContext();
+    StartAudioContext(audioContext);
+    //if (){
+    const htmlAudioElement = document.getElementById("audio");
+//}
+    const source = audioContext.createMediaElementSource(htmlAudioElement);
+    source.connect(audioContext.destination);
+    if (callback) callback(audioContext, source);
+}
+
+readAudioFromFile((context, source) => {
+    let newBlock = document.createElement("h2");
+    newBlock.innerHTML = "File loaded";
+    document.body.appendChild(newBlock);
+    if (typeof Meyda === "undefined"){
+        console.log("Metda could not be found! Have you included it?");
+    }
+    else{
+        const analyzer = Meyda.createMeydaAnalyzer({
+            audioContext: context,
+            source: source,
+            bufferSize: 512, //2048, //has to be a power of 2; 512
+            featureExtractors: ["loudness", "chroma", "amplitudeSpectrum"],
+            callback: (features) => {
+                console.log(features);
+                lastFeatures = features;
+            }
+        });
+
+        analyzer.start();
+    }
+});
+/*
 prepareMicrophone((context, source) => {
     let newBlock = document.createElement("h1");
     newBlock.innerHTML = "Microphone loaded successfully";
@@ -34,6 +70,36 @@ prepareMicrophone((context, source) => {
 
     analyzer.start();
 });
+*/
+const lineDrawing = (p) =>{
+    const params = {
+        scale: 200
+    };
+    const gui = new dat.GUI();
+    gui.add(params, "scale", 0, 400);
+
+    p.setup = () =>{
+        p.createCanvas(700,400);
+    };
+
+    p.draw = () =>{
+        p.colorMode(p.RGB, 255);
+        p.background(255, 255, 255);
+
+        if (lastFeatures){
+            lastFeatures.amplitudeSpectrum.forEach((amp,i) =>{
+                const angle = Math.PI * 2 * i/ lastFeatures.amplitudeSpectrum.length;
+                const radius = amp * params.scale;
+                const x = radius * Math.cos(angle);
+                const y = radius * Math.sin(angle);
+                //p.strokeWeight(5);
+                p.stroke(0);
+                //console.log(x, y);
+                p.line(p.width/2,p.height/2,x+p.width/2,y); //or something
+            });
+        }
+    }
+};
 
 const chromaDrawing = (p) =>{
     const params = {
@@ -84,6 +150,6 @@ const basicDrawing = (p) =>{
         }
     }
 };
-
 //const myp5 = new p5(basicDrawing, "main");
-const myp5 = new p5(chromaDrawing, "main");
+//const myp5 = new p5(chromaDrawing, "main");
+const myp5 = new p5(lineDrawing, "main"); 
