@@ -9,21 +9,30 @@
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
-    
+    <h2> Playlist for the Self-Obsessed </h2>
     <audio
     controls
     loop
     id="audio"
-    src="satistfaction.mp3"
-  >
-<!--Set attribute https://developer.mozilla.org/en-US/docs/Web/API/Element/setAttribute --> 
+    src="synchronize.mp3"
+    type="audio/mpeg"
+    >
+ 
     </audio>
-    
     <div id="main">
         <!-- the hello world app will be in here! -->
     </div>
-    
+    <button onclick="changeMusic('synchronize.mp3');"> Synchronize </button>
+    <button onclick="changeMusic('satistfaction.mp3');"> Satisfaction </button>
       <!-- bundle all the scripts! thanks to webpack -->
-      <script type="text/javascript" src="/bundle.js"></script>
+      <script type="text/javascript">
+        function changeMusic(src){
+          document.getElementById("audio").pause();
+          document.getElementById("audio").setAttribute('src', src);
+          document.getElementById("audio").load();
+          document.getElementById("audio").play();
+        }   
+      </script>
+       <script type="text/javascript" src="/bundle.js"></script>
   </body>
 </html>
